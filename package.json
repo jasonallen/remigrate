@@ -2,13 +2,21 @@
   "name": "remigrate",
   "version": "0.0.1",
   "description": "A simple migration tool and framework for rethinkDB.",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --recursive",
+    "test:watch": "npm test -- --watch"
+  },
+  "bin": {
+    "remigrate": "./bin/remigrate.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "mocha": "^2.3.3"
+    "chai": "^3.3.0",
+    "tmp": "0.0.28"
+  },
+  "dependencies": {
+    "commander": "^2.9.0"
   }
 }
