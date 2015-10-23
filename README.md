@@ -2,6 +2,8 @@
 
 A rails-inspired node.js migration tool written and framework for [RethinkDB](http://rethinkdb.com). Migrations are a convenient way to alter your database schema over time in a consistent and easy way.
 
+[![Build Status](https://travis-ci.org/jasonallen/remigrate.svg?branch=master)](https://travis-ci.org/jasonallen/remigrate)
+
 ### Installation
 
 ```
