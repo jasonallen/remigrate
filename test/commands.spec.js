@@ -1,3 +1,5 @@
+'use strict';
+
 var expect = require('chai').expect;
 var commands = require('../lib/commands');
 var tmp = require('tmp');
@@ -14,7 +16,7 @@ var fs = require('fs');
 function inEmptyDir(cb) {
   var cwd = process.cwd();
   tmp.dir(function _tempDirCreated(err, path, cleanupCallback) {
-    if (err) throw err;
+    if (err) { throw err; }
     process.chdir(path);
     cb();
     process.chdir(cwd);
@@ -22,6 +24,7 @@ function inEmptyDir(cb) {
   });
 }
 
+/* global it describe */
 describe('commands', function() {
   describe('status', function() {
     it('should fail when no migrations folder', function(done) {
@@ -53,5 +56,5 @@ describe('commands', function() {
         done();
       });
     });
-  })
+  });
 });

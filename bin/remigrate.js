@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-
-'use strict';
 var program = require('commander');
 var commands = require('../lib/wrappedCommands');
 
