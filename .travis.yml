@@ -4,3 +4,5 @@ node_js:
 script:
   - npm run lint
   - npm test
+before_install:
+  - npm install -g mocha eslint
