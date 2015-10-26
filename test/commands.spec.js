@@ -6,36 +6,10 @@ var tmp = require('tmp');
 var AppError = require('../lib/appError');
 var fs = require('fs');
 var r = require('rethinkdb');
-var util = require('../lib/util');
 
-
+/* this is the database testing */
 var dbName = 'remigratetest';
-var dbInfo = {
-  db: dbName
-};
-
-
-/**
- * runs a callback in a context with a table emptied (if it exists)
- */
-function inTableContext(dbName, tableName, cb) {
-  r.connect(util.remigraterc(), function(err1, conn) {
-    if (err1) { throw err1; }
-    r.db(dbName).tableList().run(conn, function(err2, tables) {
-      if (err2) { throw err2; }
-      if (tables.indexOf(tableName) >= 0) {
-        // table exists - empty it out
-        r.db(dbName).table(tableName).delete().run(conn, function(err3, info) {
-          if (err3) { throw err3; }
-          cb();
-          return;
-        });
-      }
-      // table doesn't exist - just cb
-      cb();
-    });
-  });
-}
+var dbInfo = { db: dbName };
 
 /**
  * runs a callback in a context where the rethinkdb database exists and
@@ -74,6 +48,9 @@ function inEmptyDir(cb) {
   });
 }
 
+/**
+ * this is a list of canned migrations to be used in tests
+ */
 var sampleMigrations = {
   'createPersons': {
     filename: '20150909082314_createPersons.js',
@@ -85,7 +62,12 @@ var sampleMigrations = {
   }
 };
 
-
+/**
+ * handy reusable function that asserts a given table exists
+ *
+ * @param {String} table name to check for
+ * @return {Promise}
+ */
 function expectTableToExist(tableName) {
   return r
     .connect(dbInfo)
@@ -184,7 +166,5 @@ describe('commands', function() {
         return expectTableToExist('persons');
       });
     });
-
   });
-
 });
