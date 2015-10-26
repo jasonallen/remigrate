@@ -8,6 +8,13 @@ var fs = require('fs');
 var r = require('rethinkdb');
 var util = require('../lib/util');
 
+
+var dbName = 'remigratetest';
+var dbInfo = {
+  db: dbName
+};
+
+
 /**
  * runs a callback in a context with a table emptied (if it exists)
  */
@@ -39,9 +46,7 @@ function inTableContext(dbName, tableName, cb) {
  * @param {Function} callback to execute in that context
  */
 function inDBContext() {
-  var dbName = 'remigratetest';
   // make sure db exists
-  var dbInfo = util.remigraterc();
   return r
     .connect(dbInfo)
     .then(function(conn) {
@@ -79,6 +84,21 @@ var sampleMigrations = {
     }; '
   }
 };
+
+
+function expectTableToExist(tableName) {
+  return r
+    .connect(dbInfo)
+    .then(function(conn) {
+      return r
+        .db(dbName)
+        .tableList()
+        .run(conn)
+        .then(function(tables) {
+          expect(tables).to.include(tableName);
+        });
+    });
+}
 
 /**
  * executes the cb in a temp dir where a migrations directory exists, and
@@ -158,6 +178,10 @@ describe('commands', function() {
 
       it('should have succeeded', function() {
         expect(upResult).to.eql([ '20150909082314_createPersons.js' ]);
+      });
+
+      it('should have created the persons table', function() {
+        return expectTableToExist('persons');
       });
     });
 
