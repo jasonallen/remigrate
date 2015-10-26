@@ -19,6 +19,7 @@
     "tmp": "0.0.28"
   },
   "dependencies": {
+    "bluebird": "^2.10.2",
     "commander": "^2.9.0",
     "rethinkdb": "^2.1.1"
   }
