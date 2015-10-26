@@ -12,17 +12,12 @@ var util = require('../lib/util');
  * runs a callback in a context with a table emptied (if it exists)
  */
 function inTableContext(dbName, tableName, cb) {
-  console.log("CWD: " + process.cwd());
   r.connect(util.remigraterc(), function(err1, conn) {
-    console.log('err1? ' + err1);
     if (err1) { throw err1; }
     r.db(dbName).tableList().run(conn, function(err2, tables) {
-      console.log('err2? ' + err2);
       if (err2) { throw err2; }
-      console.log('check3: ' + tables.length);
       if (tables.indexOf(tableName) >= 0) {
         // table exists - empty it out
-        console.log('calling table delete');
         r.db(dbName).table(tableName).delete().run(conn, function(err3, info) {
           if (err3) { throw err3; }
           cb();
@@ -30,7 +25,6 @@ function inTableContext(dbName, tableName, cb) {
         });
       }
       // table doesn't exist - just cb
-      console.log('calling cb from inTableContexter');
       cb();
     });
   });
@@ -45,29 +39,20 @@ function inTableContext(dbName, tableName, cb) {
  * @param {Function} callback to execute in that context
  */
 function inDBContext(cb) {
-  console.log('inDBContext: setting up');
   var dbName = 'remigratetest';
   var tablename = '_remigrate_';
   // make sure db exists
-  console.log("CWD: " + process.cwd());
   var dbInfo = util.remigraterc();
-  console.log("CWD1: " + process.cwd());
   r.connect(dbInfo, function(err1, conn) {
-    console.log("CWD2: " + process.cwd());
-    console.log('ERR? ' + err1);
     if (err1) { throw err1; }
     r.dbList().run(conn, function(err2, dbList) {
-      console.log("CWD3: " + process.cwd());
-      console.log('ERR2? ' + err2);
       if (err2) { throw err2; }
       if (dbList.indexOf(dbName) >= 0) {
         // db exists, run in table context
         inTableContext(dbName, tablename, cb);
         return;
       }
-      console.log('inDBContext: creating db');
       r.dbCreate(util.remigraterc().db).run(conn, function(err3, info) {
-        console.log('err3? ' + err3);
         if (err3) { throw err3; }
         // db exists, run in table context
         inTableContext(dbName, tablename, cb);
@@ -88,10 +73,8 @@ function inDBContext(cb) {
 function inEmptyDir(cb) {
   var cwd = process.cwd();
   var tmpobj = tmp.dirSync({unsafeCleanup: true});
-  console.log('inEmptyDir: chdir-ing to path');
   process.chdir(tmpobj.name);
   cb(function() {
-    console.log('inEmptyDir: cleaning up');
     process.chdir(cwd);
     tmpobj.removeCallback();
   });
@@ -99,11 +82,11 @@ function inEmptyDir(cb) {
 
 var sampleMigrations = {
   'createPersons': {
-    filename: '20150909082314_createPersons',
+    filename: '20150909082314_createPersons.js',
     contents: '\
     module.exports = { \
-      up: function(db, conn) { return db.createTable(\'persons\');}, \
-      down: function(db, conn) { return db.tableDrop(\'persons\');}  \
+      up: function(db, conn) { return db.tableCreate(\'persons\').run(conn);}, \
+      down: function(db, conn) { return db.tableDrop(\'persons\').run(conn);}  \
     }; '
   }
 };
@@ -120,11 +103,11 @@ function inDirWith(migrations, cb) {
     fs.mkdirSync('migrations');
     var remigratercContents = 'module.exports = { db:\'remigratetest\'};';
     fs.writeFileSync('migrations/remigraterc.js', remigratercContents);
-    for (var i = 0; i < migrations; i++) {
+    for (var i = 0; i < migrations.length; i++) {
       var migration = migrations[i];
-      var filename = sampleMigrations[migration].filename;
+      var filename = './migrations/' + sampleMigrations[migration].filename;
       var contents = sampleMigrations[migration].contents;
-      fs.writeFileSync('migrations/' + filename, contents);
+      fs.writeFileSync(filename, contents);
     }
     cb(done);
   });
@@ -174,7 +157,6 @@ describe('commands', function() {
       before(function(done) {
         inDirWith(['createPersons'], function(idwDone) {
           inDBContext(function() {
-            console.log('calling commandsUp');
             commands.up(function(res) {
               upResult = res;
               idwDone();
@@ -185,8 +167,10 @@ describe('commands', function() {
       });
 
       it('should have succeeded', function() {
-        expect(upResult).to.eql('Yay');
+        expect(upResult).to.eql([ '20150909082314_createPersons.js' ]);
       });
     });
+
   });
+
 });
