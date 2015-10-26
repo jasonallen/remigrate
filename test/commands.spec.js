@@ -83,6 +83,29 @@ function expectTableToExist(tableName) {
 }
 
 /**
+ * handy function to
+ */
+function expectMigrationRecords(migrations) {
+  return r
+    .connect(dbInfo)
+    .then(function(conn) {
+      return r
+        .db(dbName)
+        .table('_remigrate_')
+        .run(conn)
+        .then(function(cursor) {
+          return cursor
+            .toArray()
+            .then(function(records) {
+              var byName = records.map(function(item) {return item.name;});
+              expect(byName).to.eql(migrations);
+              return new Promise(function(res) { res(); });
+            });
+        });
+    });
+}
+
+/**
  * executes the cb in a temp dir where a migrations directory exists, and
  * is populated with the array of migrations specified.
  *
@@ -164,6 +187,10 @@ describe('commands', function() {
 
       it('should have created the persons table', function() {
         return expectTableToExist('persons');
+      });
+
+      it('should have recorded the migration', function() {
+        return expectMigrationRecords(['20150909082314_createPersons.js']);
       });
     });
   });
