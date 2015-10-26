@@ -38,29 +38,18 @@ function inTableContext(dbName, tableName, cb) {
  * @param {String} tableName
  * @param {Function} callback to execute in that context
  */
-function inDBContext(cb) {
+function inDBContext() {
   var dbName = 'remigratetest';
-  var tablename = '_remigrate_';
   // make sure db exists
   var dbInfo = util.remigraterc();
-  r.connect(dbInfo, function(err1, conn) {
-    if (err1) { throw err1; }
-    r.dbList().run(conn, function(err2, dbList) {
-      if (err2) { throw err2; }
-      if (dbList.indexOf(dbName) >= 0) {
-        // db exists, run in table context
-        inTableContext(dbName, tablename, cb);
-        return;
-      }
-      r.dbCreate(util.remigraterc().db).run(conn, function(err3, info) {
-        if (err3) { throw err3; }
-        // db exists, run in table context
-        inTableContext(dbName, tablename, cb);
-        return;
+  return r
+    .connect(dbInfo)
+    .then(function(conn) {
+      return r.dbDrop(dbName).run(conn)
+        .then(function() {
+          r.dbCreate(dbName).run(conn);
       });
     });
-
-  });
 }
 
 /**
@@ -156,13 +145,14 @@ describe('commands', function() {
 
       before(function(done) {
         inDirWith(['createPersons'], function(idwDone) {
-          inDBContext(function() {
-            commands.up(function(res) {
-              upResult = res;
-              idwDone();
-              done();
+          inDBContext()
+            .then(function() {
+              commands.up(function(res) {
+                upResult = res;
+                idwDone();
+                done();
+              });
             });
-          });
         });
       });
 
