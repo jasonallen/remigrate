@@ -116,28 +116,35 @@ function expectMigrationRecords(migrations) {
 }
 
 /**
- * executes the cb in a temp dir where a migrations directory exists, and
- * is populated with the array of migrations specified.
+ * changes working directory to a tmp dir with the specified migrations
+ * in a ./migrations dir. Returns a function that will restore the cwd
+ * to previous state, and delete the tmp dir, even if its not empty
  *
- * @param {Array} array of migration names to add
- * @param {Function} callback to executes, with a doneCb param
+ * @param {Array} array of migrations (see sampleMigrations above)
+ *
+ * @return {Function} cleanup Function
  */
-function inDirWith(migrations, cb) {
-  inEmptyDir(function(done) {
-    fs.mkdirSync('migrations');
-    var remigratercContents = 'module.exports = { db:\'remigratetest\'};';
-    fs.writeFileSync('migrations/remigraterc.js', remigratercContents);
-    for (var i = 0; i < migrations.length; i++) {
-      var migration = migrations[i];
-      var filename = './migrations/' + sampleMigrations[migration].filename;
-      var contents = sampleMigrations[migration].contents;
-      fs.writeFileSync(filename, contents);
-    }
-    cb(done);
-  });
+function inTmpDirWith(migrations) {
+  var cwd = process.cwd();
+  var tmpobj = tmp.dirSync({unsafeCleanup: true});
+  process.chdir(tmpobj.name);
+  fs.mkdirSync('migrations');
+  var remigratercContents = 'module.exports = { db:\'remigratetest\'};';
+  fs.writeFileSync('migrations/remigraterc.js', remigratercContents);
+  for (var i = 0; i < migrations.length; i++) {
+    var migration = migrations[i];
+    var filename = './migrations/' + sampleMigrations[migration].filename;
+    var contents = sampleMigrations[migration].contents;
+    fs.writeFileSync(filename, contents);
+  }
+  return function() {
+    process.chdir(cwd);
+    tmpobj.removeCallback();
+  };
 }
 
-/* global it describe before*/
+
+/* global it describe before after*/
 describe('commands', function() {
   this.timeout(8000);
 
@@ -177,18 +184,20 @@ describe('commands', function() {
 
     describe('after a first up migration', function() {
       var upResult;
+      var cleanupDir;
 
-      before(function(done) {
-        inDirWith(['createPersons'], function(idwDone) {
-          inDBContext()
-            .then(function() {
-              commands.up(function(res) {
-                upResult = res;
-                idwDone();
-                done();
-              });
-            });
-        });
+      before(function() {
+        cleanupDir = inTmpDirWith(['createPersons']);
+        return inDBContext()
+          .then(commands.up)
+          .then(function(res) {
+            upResult = res;
+            return new Promise(function(res2) { return res2(); });
+          });
+      });
+
+      after(function() {
+        cleanupDir();
       });
 
       it('should have succeeded', function() {
@@ -202,6 +211,7 @@ describe('commands', function() {
       it('should have recorded the migration', function() {
         return expectMigrationRecords(['20150909082314_createPersons.js']);
       });
+
     });
   });
 });
