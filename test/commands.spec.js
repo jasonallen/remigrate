@@ -9,6 +9,7 @@ var r = require('rethinkdb');
 
 /* this is the database testing */
 var dbName = 'remigratetest';
+var tableName = '_remigrate_';
 var dbInfo = { db: dbName };
 
 /**
@@ -78,7 +79,7 @@ var sampleMigrations = {
  * @param {String} table name to check for
  * @return {Promise}
  */
-function expectTableToExist(tableName) {
+function expectTableToExist(name) {
   return r
     .connect(dbInfo)
     .then(function(conn) {
@@ -87,7 +88,7 @@ function expectTableToExist(tableName) {
         .tableList()
         .run(conn)
         .then(function(tables) {
-          expect(tables).to.include(tableName);
+          expect(tables).to.include(name);
         });
     });
 }
@@ -101,7 +102,7 @@ function expectMigrationRecords(migrations) {
     .then(function(conn) {
       return r
         .db(dbName)
-        .table('_remigrate_')
+        .table(tableName)
         .run(conn)
         .then(function(cursor) {
           return cursor
@@ -219,7 +220,7 @@ describe('commands', function() {
         });
 
         it('should have succeeded', function() {
-          expect(statusResult).to.eql('');
+          expect(statusResult).to.eql([]);
         });
 
       });
