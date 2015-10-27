@@ -113,39 +113,39 @@ describe('commands', function() {
       cleanupDir();
     });
 
-      describe('after calling \'migrate up\'', function() {
-        var upResult;
+    describe('after calling \'migrate up\'', function() {
+      var upResult;
+
+      before(function() {
+        return commands.up()
+          .then(function(res) {
+            upResult = res;
+          });
+      });
+
+      it('should have succeeded', function() {
+        expect(upResult).to.eql([ '20150909082314_createPersons.js' ]);
+      });
+
+      it('should have created the persons table', function() {
+        return h.expectTableToExist('persons');
+      });
+
+      it('should have recorded the migration', function() {
+        return h.expectMigrationRecords(['20150909082314_createPersons.js']);
+      });
+
+      describe('running status', function() {
+        var statusResult;
 
         before(function() {
-          return commands.up()
-            .then(function(res) {
-              upResult = res;
-            });
+          return commands.status().then(function(res) { statusResult = res; });
         });
 
         it('should have succeeded', function() {
-          expect(upResult).to.eql([ '20150909082314_createPersons.js' ]);
-        });
-
-        it('should have created the persons table', function() {
-          return h.expectTableToExist('persons');
-        });
-
-        it('should have recorded the migration', function() {
-          return h.expectMigrationRecords(['20150909082314_createPersons.js']);
-        });
-
-        describe('running status', function() {
-          var statusResult;
-
-          before(function() {
-            return commands.status().then(function(res) { statusResult = res; });
-          });
-
-          it('should have succeeded', function() {
-            expect(statusResult).to.eql([]);
-          });
+          expect(statusResult).to.eql([]);
         });
       });
+    });
   });
 });
