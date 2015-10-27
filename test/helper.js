@@ -127,14 +127,16 @@ function inTmpDirWith(migrations) {
   var cwd = process.cwd();
   var tmpobj = tmp.dirSync({unsafeCleanup: true});
   process.chdir(tmpobj.name);
-  fs.mkdirSync('migrations');
-  var remigratercContents = 'module.exports = { db:\'remigratetest\'};';
-  fs.writeFileSync('migrations/remigraterc.js', remigratercContents);
-  for (var i = 0; i < migrations.length; i++) {
-    var migration = migrations[i];
-    var filename = './migrations/' + sampleMigrations[migration].filename;
-    var contents = sampleMigrations[migration].contents;
-    fs.writeFileSync(filename, contents);
+  if (migrations) {
+    fs.mkdirSync('migrations');
+    var remigratercContents = 'module.exports = { db:\'remigratetest\'};';
+    fs.writeFileSync('migrations/remigraterc.js', remigratercContents);
+    for (var i = 0; i < migrations.length; i++) {
+      var migration = migrations[i];
+      var filename = './migrations/' + sampleMigrations[migration].filename;
+      var contents = sampleMigrations[migration].contents;
+      fs.writeFileSync(filename, contents);
+    }
   }
   return function() {
     process.chdir(cwd);
@@ -142,10 +144,30 @@ function inTmpDirWith(migrations) {
   };
 }
 
+function removeTestDB() {
+  return r
+    .connect(dbInfo)
+    .then(function(conn) {
+      return r
+        .dbList()
+        .run(conn)
+        .then(function(dbs) {
+          if (dbs.indexOf(dbName) < 0) {
+            return null;
+          }
+          return r.dbDrop(dbName).run(conn);
+        });
+    });
+}
+
 module.exports = {
   inTmpDirWith: inTmpDirWith,
   expectMigrationRecords: expectMigrationRecords,
   expectTableToExist: expectTableToExist,
   inEmptyDir: inEmptyDir,
-  inDBContext: inDBContext
+  inDBContext: inDBContext,
+  dbName: dbName,
+  tableName: tableName,
+  removeTestDB: removeTestDB,
+  dbInfo: dbInfo
 };
