@@ -192,7 +192,6 @@ describe('commands', function() {
           .then(commands.up)
           .then(function(res) {
             upResult = res;
-            return new Promise(function(res2) { return res2(); });
           });
       });
 
@@ -212,6 +211,18 @@ describe('commands', function() {
         return expectMigrationRecords(['20150909082314_createPersons.js']);
       });
 
+      describe('running status', function() {
+        var statusResult;
+
+        before(function() {
+          return commands.status().then(function(res) { statusResult = res; });
+        });
+
+        it('should have succeeded', function() {
+          expect(statusResult).to.eql('');
+        });
+
+      });
     });
   });
 });
