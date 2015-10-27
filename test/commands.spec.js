@@ -139,7 +139,7 @@ function inDirWith(migrations, cb) {
 
 /* global it describe before*/
 describe('commands', function() {
-  this.timeout(5000);
+  this.timeout(8000);
 
   describe('status', function() {
     it('should fail when no migrations folder', function(done) {
