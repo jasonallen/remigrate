@@ -24,10 +24,20 @@ function inDBContext() {
   return r
     .connect(dbInfo)
     .then(function(conn) {
-      return r.dbDrop(dbName).run(conn)
-        .then(function() {
-          r.dbCreate(dbName).run(conn);
-      });
+      return r
+        .dbList()
+        .run(conn)
+        .then(function(dbs) {
+          if (dbs.indexOf(dbName) < 0) {
+            // doesnt exist - we're done
+            return new Promise(function(res) { res(); });
+          }
+          return r.dbDrop(dbName).run(conn)
+            .then(function() {
+              r.dbCreate(dbName).run(conn);
+          });
+
+        });
     });
 }
 
