@@ -164,6 +164,13 @@ function resetOutput() {
   context.stderr().reset();
 }
 
+/**
+ * sets the test database context
+ */
+function setTestDBContext(override) {
+  context.setDB(override || dbName);
+}
+
 module.exports = {
   inTmpDirWith: inTmpDirWith,
   expectMigrationRecords: expectMigrationRecords,
@@ -174,5 +181,6 @@ module.exports = {
   tableName: tableName,
   removeTestDB: removeTestDB,
   dbInfo: dbInfo,
-  resetOutput: resetOutput
+  resetOutput: resetOutput,
+  setTestDBContext: setTestDBContext
 };
