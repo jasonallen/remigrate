@@ -19,7 +19,7 @@ function fakeStream() {
     reset: function() {
       buffer = '';
     },
-    value: buffer
+    value: function() { return buffer; }
   };
 }
 context.setOutput(fakeStream(), fakeStream());

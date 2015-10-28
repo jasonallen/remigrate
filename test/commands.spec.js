@@ -3,6 +3,7 @@
 var h = require('./helper');
 var commands = require('../lib/commands');
 var AppError = require('../lib/appError');
+var context = require('../lib/context');
 
 var cmdFlags = {
   parent: { database: 'remigratetest'}
@@ -24,25 +25,16 @@ describe('commands', function() {
       cleanupDir();
     });
 
-    describe('status', function() {
-      it('when with dbinfo, should fail with missing migration error', function(done) {
-        return commands.status(cmdFlags).should.be.rejectedWith(AppError,/Missing migrations directory/ )
-          .notify(done);
-      });
-      it('without dbInfo, should fail with missing migration directory', function(done) {
-        return commands.status().should.be.rejectedWith(AppError, /No DB Specified/)
-          .notify(done);
-      });
-    });
-
-    describe('up', function() {
-      it('when with dbinfo, should fail with missing migration error', function(done) {
-        return commands.up(cmdFlags).should.be.rejectedWith(AppError,/Missing migrations directory/ )
-          .notify(done);
-      });
-      it('without dbInfo, should fail with missing migration directory', function(done) {
-        return commands.up().should.be.rejectedWith(AppError, /No DB Specified/)
-          .notify(done);
+    ['status', 'up'].map(function(command) {
+      describe(command, function() {
+        it('with dbinfo, it should fail with missing migration directory', function(done) {
+          return commands[command](cmdFlags).should.be.rejectedWith(AppError,/Missing migrations directory/ )
+            .notify(done);
+        });
+        it('without dbInfo, should fail with missing db info', function(done) {
+          return commands[command]().should.be.rejectedWith(AppError, /No DB Specified/)
+            .notify(done);
+        });
       });
     });
   });
@@ -135,20 +127,17 @@ describe('commands', function() {
       });
     });
 */
-    describe('after calling \'migrate up\'', function() {
-      var upResult;
+    describe('after calling "migrate up"', function() {
 
       before(function() {
-        return commands.up(cmdFlags)
-          .then(function(res) {
-            upResult = res;
-          });
+        return commands.up(cmdFlags);
       });
 
+      /*
       it('should have succeeded', function() {
         expect(upResult).to.eql([ '20150909082314_createPersons.js' ]);
       });
-
+      */
       it('should have created the persons table', function() {
         return h.expectTableToExist('persons');
       });
@@ -157,15 +146,14 @@ describe('commands', function() {
         return h.expectMigrationRecords(['20150909082314_createPersons.js']);
       });
 
-      describe('running status', function() {
-        var statusResult;
+      describe('then running status', function() {
 
         before(function() {
-          return commands.status(cmdFlags).then(function(res) { statusResult = res; });
+          return commands.status(cmdFlags);
         });
 
         it('should have succeeded', function() {
-          expect(statusResult).to.eql([]);
+          expect(context.stdout().value()).to.match(/0 migrations to run/);
         });
       });
     });
