@@ -9,7 +9,7 @@ var cmdFlags = {
   parent: { database: 'remigratetest'}
 };
 
-/* global it describe before after expect beforeEach*/
+/* global it describe before after expect*/
 describe('commands', function() {
   this.timeout(8000);
 
@@ -39,7 +39,7 @@ describe('commands', function() {
     });
   });
 
-  describe('when in a dir with just a migrations dir', function() {
+  describe('when with an empty migrations dir', function() {
     var cleanupDir;
 
     before(function() {
@@ -51,65 +51,43 @@ describe('commands', function() {
       cleanupDir();
     });
 
-    describe('status without a db specified', function() {
-      beforeEach(function() {h.resetOutput();});
-
-      it('should throw with <NoDBSpecified>', function(done) {
-        commands.status().should.be.rejectedWith(AppError, /No DB Specified/).notify(done);
+    ['status', 'up'].map(function(command) {
+      describe(command, function() {
+        it('without dbInfo, should fail with missing db info', function(done) {
+          return commands[command]().should.be.rejectedWith(AppError, /No DB Specified/)
+            .notify(done);
+        });
       });
     });
 
-    describe('status with db specified', function() {
-      beforeEach(function() {
+    describe('running status', function() {
+      before(function() {
         h.resetOutput();
         return commands.status(cmdFlags);
       });
-    });
 
-/*
-    describe('up', function() {
-      it('should fail with missing migration error', function() {
-        expect(function() {
-          commands.up();
-        }).to.throw(AppError, /Cannot read migrations\/remigraterc\.js file/);
-      });
-    });
-*/
-  });
-/*
-  describe('when in a dir with a malformed remigraterc.js file', function() {
-    var cleanupDir;
-
-    before(function() {
-      cleanupDir = h.inTmpDirWith([]);
-      return h.removeTestDB();
-    });
-
-    after(function() {
-      cleanupDir();
-    });
-
-    describe('status', function() {
-      it('should fail with malformed remigraterc', function() {
-        expect(function() {
-          commands.status();
-        }).to.throw(AppError, /remigraterc\.js file seems malformed/);
+      it ('should return 0 migrations to run', function() {
+        expect(context.stdout().value()).to.match(/0 migrations to run/);
       });
     });
 
-    describe('up', function() {
-      it('should fail with malformed remigraterc', function() {
-        expect(function() {
-          commands.up();
-        }).to.throw(AppError, /remigraterc\.js file seems malformed/);
+    describe('running up', function() {
+      before(function() {
+        h.resetOutput();
+        return commands.up(cmdFlags);
+      });
+
+      it ('should return that nothing ran', function() {
+        expect(context.stdout().value()).to.match(/0 migrations to run/);
       });
     });
   });
-*/
-  describe('in a dir with one migration and no db', function() {
+
+  describe('in a dir with one migration, and no db', function() {
     var cleanupDir;
 
     before(function() {
+      h.resetOutput();
       cleanupDir = h.inTmpDirWith(['createPersons']);
       return h.removeTestDB();
     });
@@ -118,26 +96,16 @@ describe('commands', function() {
       cleanupDir();
     });
 
-/*
-    describe('with no db connection params', function() {
-      it('status should fail', function() {
-        expect(function() {
-          commands.status();
-        }).to.throw(AppError, /Missing migrations directory/);
-      });
-    });
-*/
     describe('after calling "migrate up"', function() {
-
       before(function() {
         return commands.up(cmdFlags);
       });
 
-      /*
-      it('should have succeeded', function() {
-        expect(upResult).to.eql([ '20150909082314_createPersons.js' ]);
+      it('should output success', function() {
+        expect(context.stdout().value()).to.match(/1 migrations to run/);
+        expect(context.stdout().value()).to.match(/running 20150909082314_createPersons\.js\.\.\.\.\.\.done\./);
       });
-      */
+
       it('should have created the persons table', function() {
         return h.expectTableToExist('persons');
       });
