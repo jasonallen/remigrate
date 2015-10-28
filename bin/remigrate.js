@@ -3,12 +3,14 @@ var program = require('commander');
 var commands = require('../lib/wrappedCommands');
 
 program
-  .version('0.0.1');
+  .version('0.0.1')
+  .option('-d, --database <dbname>', 'database name')
+  .option('-p, --port <portnumber>', 'port number');
 
 program
   .command('generate [name]')
   .description('generates a new migration')
-  .action(commands.wrapErrorcommands.generate);
+  .action(commands.generate);
 
 program
   .command('up')

@@ -4,6 +4,7 @@ var expect = require('chai').expect;
 var tmp = require('tmp');
 var fs = require('fs');
 var r = require('rethinkdb');
+var context = require('../lib/context');
 
 /* this is the database testing */
 var dbName = 'remigratetest';
@@ -129,8 +130,6 @@ function inTmpDirWith(migrations) {
   process.chdir(tmpobj.name);
   if (migrations) {
     fs.mkdirSync('migrations');
-    var remigratercContents = 'module.exports = { db:\'remigratetest\'};';
-    fs.writeFileSync('migrations/remigraterc.js', remigratercContents);
     for (var i = 0; i < migrations.length; i++) {
       var migration = migrations[i];
       var filename = './migrations/' + sampleMigrations[migration].filename;
@@ -160,6 +159,11 @@ function removeTestDB() {
     });
 }
 
+function resetOutput() {
+  context.stdout().reset();
+  context.stderr().reset();
+}
+
 module.exports = {
   inTmpDirWith: inTmpDirWith,
   expectMigrationRecords: expectMigrationRecords,
@@ -169,5 +173,6 @@ module.exports = {
   dbName: dbName,
   tableName: tableName,
   removeTestDB: removeTestDB,
-  dbInfo: dbInfo
+  dbInfo: dbInfo,
+  resetOutput: resetOutput
 };

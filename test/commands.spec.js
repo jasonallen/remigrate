@@ -1,16 +1,20 @@
 'use strict';
 
 var h = require('./helper');
-var expect = require('chai').expect;
 var commands = require('../lib/commands');
 var AppError = require('../lib/appError');
-var fs = require('fs');
+var context = require('../lib/context');
 
-/* global it describe before after*/
+
+var cmdFlags = {
+  parent: { database: 'remigratetest'}
+};
+
+/* global it describe before after expect beforeEach*/
 describe('commands', function() {
   this.timeout(8000);
 
-  describe('when in a completely empty dir and no DB', function() {
+  describe('when in a completely empty dir', function() {
     var cleanupDir;
 
     before(function() {
@@ -23,29 +27,33 @@ describe('commands', function() {
     });
 
     describe('status', function() {
-      it('should fail with missing migration error', function() {
-        expect(function() {
-          commands.status();
-        }).to.throw(AppError, /Missing migrations directory/);
+      it('when with dbinfo, should fail with missing migration error', function(done) {
+        return commands.status(cmdFlags).should.be.rejectedWith(AppError,/Missing migrations directory/ )
+          .notify(done);
+      });
+      it('without dbInfo, should fail with missing migration directory', function(done) {
+        return commands.status().should.be.rejectedWith(AppError, /No DB Specified/)
+          .notify(done);
       });
     });
 
     describe('up', function() {
-      it('should fail with missing migration error', function() {
-        expect(function() {
-          commands.up();
-        }).to.throw(AppError, /Missing migrations directory/);
+      it('when with dbinfo, should fail with missing migration error', function(done) {
+        return commands.up(cmdFlags).should.be.rejectedWith(AppError,/Missing migrations directory/ )
+          .notify(done);
+      });
+      it('without dbInfo, should fail with missing migration directory', function(done) {
+        return commands.up().should.be.rejectedWith(AppError, /No DB Specified/)
+          .notify(done);
       });
     });
   });
 
-  describe('when in a dir with migrations dir, but no remigraterc.js file', function() {
+  describe('when in a dir with just a migrations dir', function() {
     var cleanupDir;
 
     before(function() {
       cleanupDir = h.inTmpDirWith([]);
-      // delete the remigraterc
-      fs.unlinkSync('./migrations/remigraterc.js');
       return h.removeTestDB();
     });
 
@@ -53,14 +61,22 @@ describe('commands', function() {
       cleanupDir();
     });
 
-    describe('status', function() {
-      it('should fail with missing migration error', function() {
-        expect(function() {
-          commands.status();
-        }).to.throw(AppError, /Cannot read migrations\/remigraterc\.js file/);
+    describe('status without a db specified', function() {
+      beforeEach(function() {h.resetOutput();});
+
+      it('should throw with <NoDBSpecified>', function(done) {
+        commands.status().should.be.rejectedWith(AppError, /No DB Specified/).notify(done);
       });
     });
 
+    describe('status with db specified', function() {
+      beforeEach(function() {
+        h.resetOutput();
+        return commands.status(cmdFlags);
+      });
+    });
+
+/*
     describe('up', function() {
       it('should fail with missing migration error', function() {
         expect(function() {
@@ -68,15 +84,14 @@ describe('commands', function() {
         }).to.throw(AppError, /Cannot read migrations\/remigraterc\.js file/);
       });
     });
+*/
   });
-
+/*
   describe('when in a dir with a malformed remigraterc.js file', function() {
     var cleanupDir;
 
     before(function() {
       cleanupDir = h.inTmpDirWith([]);
-      // corrupt the remigraterc
-      fs.writeFileSync('./migrations/remigraterc.js', '{}');
       return h.removeTestDB();
     });
 
@@ -100,7 +115,7 @@ describe('commands', function() {
       });
     });
   });
-
+*/
   describe('in a dir with one migration and no db', function() {
     var cleanupDir;
 
@@ -113,11 +128,20 @@ describe('commands', function() {
       cleanupDir();
     });
 
+/*
+    describe('with no db connection params', function() {
+      it('status should fail', function() {
+        expect(function() {
+          commands.status();
+        }).to.throw(AppError, /Missing migrations directory/);
+      });
+    });
+*/
     describe('after calling \'migrate up\'', function() {
       var upResult;
 
       before(function() {
-        return commands.up()
+        return commands.up(cmdFlags)
           .then(function(res) {
             upResult = res;
           });
@@ -139,7 +163,7 @@ describe('commands', function() {
         var statusResult;
 
         before(function() {
-          return commands.status().then(function(res) { statusResult = res; });
+          return commands.status(cmdFlags).then(function(res) { statusResult = res; });
         });
 
         it('should have succeeded', function() {
