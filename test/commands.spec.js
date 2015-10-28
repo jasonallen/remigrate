@@ -3,8 +3,6 @@
 var h = require('./helper');
 var commands = require('../lib/commands');
 var AppError = require('../lib/appError');
-var context = require('../lib/context');
-
 
 var cmdFlags = {
   parent: { database: 'remigratetest'}
