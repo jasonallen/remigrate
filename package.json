@@ -1,6 +1,6 @@
 {
   "name": "remigrate",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A simple migration tool and framework for rethinkDB.",
   "main": "lib/index.js",
   "scripts": {
