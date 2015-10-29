@@ -67,7 +67,7 @@ describe('commands', function() {
       });
 
       it ('should return 0 migrations to run', function() {
-        expect(context.stdout().value()).to.match(/0 migrations to run/);
+        expect(context.stdout().value()).to.match(/0 migrations run\.\n\n0 migrations pending\./);
       });
     });
 
@@ -117,11 +117,13 @@ describe('commands', function() {
       describe('then running status', function() {
 
         before(function() {
+          h.resetOutput();
           return commands.status(cmdFlags);
         });
 
         it('should have succeeded', function() {
-          expect(context.stdout().value()).to.match(/0 migrations to run/);
+          expect(context.stdout().value()).to.match(/1 migrations run/);
+          expect(context.stdout().value()).to.match(/0 migrations pending/);
         });
       });
     });
