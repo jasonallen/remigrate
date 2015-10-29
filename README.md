@@ -17,10 +17,9 @@ Your first step is to configure remigrate. To do this you need to create a .remi
 
 ```
 mkdir migrations
-echo "export {db:'mytestdb'}" > migrations/.remigraterc.js
 ```
 
-Create your first migration.
+Create your first migration *WARNING: NOT YET IMPLEMENTED*
 
 ```
 remigrate generate createPersonTable
@@ -43,16 +42,16 @@ export {
 };
 ```
 
-Now you are ready to run your migration:
+Now you are ready to run your migration (replace <database_name> with your database):
 
 ```
-remigrate up
+remigrate -d <database_name> up
 ```
 
 If you don't see any errors, then your RethinkDB is migrated up. You can rollback by running:
 
 ```
-remigrate down
+remigrate -d <database_name> down
 ```
 
 ### Contributing
