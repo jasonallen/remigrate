@@ -18,7 +18,7 @@ program
   .action(commands.up);
 
 program
-  .command('down')
+  .command('down [migration]')
   .description('migrates down the last migration')
   .action(commands.down);
 

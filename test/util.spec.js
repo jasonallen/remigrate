@@ -8,9 +8,7 @@ describe('util', function() {
   this.timeout(8000);
 
   describe('dbMigrations', function() {
-
     describe('with no DB', function() {
-
       before(function() {
         h.setTestDBContext();
         return h.removeTestDB();
